@@ -7,42 +7,69 @@ import (
 	"appengine/user"
 )
 
-const (
-	KIND = "Blog"
-)
-
 func blogKey(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, KIND, "all_blogs", 0, nil)
 }
 
-func getBlog(c appengine.Context) {
-	
+func getBlog(c appengine.Context, id int64) (*Blog, error){
+	key := datastore.NewKey(c, KIND, "", id, blogKey(c))
+
+	blog := &Blog{}
+
+	if err := datastore.Get(c, key, blog); err != nil {
+		return nil, err
+	}
+
+	return blog, nil
 }
 
-func getAllBlogs(c appengine.Context) ([]Blog, error) {
+func getAllBlogs(c appengine.Context) (*[]*Blog, error) {
 	q := datastore.NewQuery(KIND).Ancestor(blogKey(c)).Order("-Date")
 
-    blogs := make([]Blog, 0)
+    blogs := make([]*Blog, 0)
 
     if _, err := q.GetAll(c, &blogs); err != nil {
         return nil, err
     }
 
-    return blogs, nil
+    return &blogs, nil
 }
 
-func updateBlog(c appengine.Context) {
+func updateBlog(c appengine.Context, content string, id int64) error {
 
+	key := datastore.NewKey(c, KIND, "", id, blogKey(c))
+
+	blog := &Blog{}
+
+	if err := datastore.Get(c, key, blog); err != nil {
+		return err
+	}
+
+	blog.Content = content
+	blog.LastUpdated = time.Now()
+
+	if _, err := datastore.Put(c, key, blog); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func deleteBlog(c appengine.Context) {
+func deleteBlog(c appengine.Context, id int64) error {
+	key := datastore.NewKey(c, KIND, "", id, blogKey(c))
 
+	err := datastore.Delete(c, key)
+
+	return err;
 }
 
 func createBlog(c appengine.Context, content string) (*datastore.Key, error){
+	time := time.Now()
+
 	blog := &Blog{
         Content: content,
-        Date:  time.Now(),
+        Date:  time,
+        LastUpdated: time,
 	}
 
 	if u := user.Current(c); u != nil {

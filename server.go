@@ -4,11 +4,48 @@ import (
         "html/template"
         "net/http"
         "appengine"
+        "fmt"
 )
 
 func init() {
     http.HandleFunc("/", createHandler(root))
-    http.HandleFunc("/sign", createHandler(sign))
+    http.HandleFunc("/get", createHandler(get))
+    http.HandleFunc("/delete", createHandler(delete))
+    http.HandleFunc("/update", createHandler(update))
+    http.HandleFunc("/create", createHandler(create))
+}
+
+func get(c appengine.Context, w http.ResponseWriter, r *http.Request) (error) {
+	var id int64 = 5064350557536256
+
+	b, err := getBlog(c, id)
+
+	fmt.Fprint(w, b.Content)
+
+	return err
+}
+
+func update(c appengine.Context, w http.ResponseWriter, r *http.Request) (error) {
+	var id int64 = 5064350557536256
+
+	err := updateBlog(c, "This has been updated", id)
+
+	return err
+}
+
+
+func delete(c appengine.Context, w http.ResponseWriter, r *http.Request) (error) {
+	var id int64 = 5064350557536256
+
+	err := deleteBlog(c, id)
+
+	return err
+}
+
+func create(c appengine.Context, w http.ResponseWriter, r *http.Request) (error) {
+	_, err := createBlog(c, "This is a blog")
+    
+    return err
 }
 
 func root(c appengine.Context, w http.ResponseWriter, r *http.Request) (error) {
@@ -23,16 +60,6 @@ func root(c appengine.Context, w http.ResponseWriter, r *http.Request) (error) {
     }
 
     return nil;
-}
-
-func sign(c appengine.Context, w http.ResponseWriter, r *http.Request)  (error) {
-    if _, err := createBlog(c, "This is a blog"); err != nil {
-    	return err
-    }
-
-   	http.Redirect(w, r, "/", http.StatusFound)
-
-   	return nil
 }
 
 func createHandler(fn func(appengine.Context, http.ResponseWriter, *http.Request) (error)) http.HandlerFunc {

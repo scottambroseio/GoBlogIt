@@ -6,8 +6,11 @@ type Blog struct {
         Author  string
         Content string
         Date    time.Time
+        LastUpdated time.Time
 }
 
 func newBlog() Blog {
-	return Blog{"Test Author", "Test Content", time.Now()}
+	time := time.Now()
+
+	return Blog{"Test Author", "Test Content", time, time}
 }
